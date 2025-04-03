@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审核页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+
+        #main-container {
+            display: flex;
+            width: 90%;
+            gap: 20px;
+        }
+
+        #map {
+            width: 75%;
+            height: 500px;
+            border: 1px solid #ccc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #search-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        #search-wrapper {
+            position: relative;
+        }
+
+        #search-type {
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: white;
+            border: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 0 5px;
+        }
+
+        #search-input {
+            padding: 5px 5px 5px 100px;
+            margin-right: 5px;
+            width: 250px;
+            box-sizing: border-box;
+        }
+
+        #search-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+
+        #toggle-table {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+
+        #flight-plan-cards {
+            position: absolute;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: white;
+            border-left: 1px solid #ccc;
+            z-index: 1;
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .flight-plan-card {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        #legend {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 1;
+            transition: right 0.3s ease;
+        }
+
+        #legend ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #legend li {
+            margin-bottom: 5px;
+        }
+
+        #review-section {
+            width: 25%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #file-preview {
+            text-align: left;
+            margin-bottom: 5px;
+        }
+
+        #file-links {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        #file-links a {
+            text-decoration: none;
+            color: #007bff;
+            padding: 10px 20px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            background-image: url('https://dummyimage.com/20x20/0000ff/ffffff&text=DOC');
+            background-repeat: no-repeat;
+            background-position: 10px center;
+            padding-left: 40px;
+        }
+
+        #file-links a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #result-title {
+            text-align: left;
+            margin-bottom: 5px;
+        }
+
+        #result-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            max-height: 100px;
+            min-height: 50px;
+            resize: vertical;
+            overflow: auto;
+            word-wrap: break-word;
+            word-break: break-all;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            font-size: 12px;
+            height: auto;
+            margin-top: 10px;
+            max-length: 100;
+        }
+
+        #radio-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #submit-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        #flight-plan-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        /* 缩小后的开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 17px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 13px;
+            width: 13px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(13px);
+            -ms-transform: translateX(13px);
+            transform: translateX(13px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 17px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        /* 弹窗样式 */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            z-index: 2;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+
+        .polygon {
+            position: absolute;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main-container">
+        <div id="map">
+            <div id="search-container">
+                <div id="search-wrapper">
+                    <select id="search-type">
+                        <option value="my-airspace">我的空域</option>
+                        <option value="my-takeoff-landing">我的起降点</option>
+                        <option value="location-search" selected>地点检索</option>
+                    </select>
+                    <input type="text" id="search-input" placeholder="输入搜索内容">
+                </div>
+                <button id="search-button">🔍</button>
+            </div>
+            <button id="toggle-table">展开</button>
+            <div id="flight-plan-cards">
+                <h3>时间冲突飞行计划</h3>
+                <p>共 10 条数据</p>
+                <div class="flight-plan-card">
+                    <p>FP0000000001</p>
+                    <p>2025-04-03 10:41:29~2025-08-03 10:41:44</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000002</p>
+                    <p>2025-04-04 11:42:30~2025-08-04 11:42:45</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000003</p>
+                    <p>2025-04-05 12:43:31~2025-08-05 12:43:46</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000004</p>
+                    <p>2025-04-06 13:44:32~2025-08-06 13:44:47</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000005</p>
+                    <p>2025-04-07 14:45:33~2025-08-07 14:45:48</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000006</p>
+                    <p>2025-04-08 15:46:34~2025-08-08 15:46:49</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000007</p>
+                    <p>2025-04-09 16:47:35~2025-08-09 16:47:50</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000008</p>
+                    <p>2025-04-10 17:48:36~2025-08-10 17:48:51</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000009</p>
+                    <p>2025-04-11 18:49:37~2025-08-11 18:49:52</p>
+                </div>
+                <div class="flight-plan-card">
+                    <p>FP0000000010</p>
+                    <p>2025-04-12 19:50:38~2025-08-12 19:50:53</p>
+                </div>
+            </div>
+            <div id="legend">
+                <ul>
+                    <li>
+                        <label>切换：
+                            <select id="map-mode">
+                                <option value="roadmap" selected>路网图</option>
+                                <option value="satellite">卫星图</option>
+                            </select>
+                        </label>
+                    </li>
+                    <li>
+                        <label>空域：
+                            <label class="switch">
+                                <input type="checkbox" id="airspace-toggle" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </label>
+                    </li>
+                </ul>
+            </div>
+            <div id="flight-plan-info">
+                <div class="flight-plan-card">
+                    <p>FP0000000001</p>
+                    <p>2025-04-03 10:41:29~2025-08-03 10:41:44</p>
+                </div>
+            </div>
+            <!-- 绘制中心蓝色圆 -->
+            <div class="circle" style="width: 200px; height: 200px; left: calc(50% - 100px); top: calc(50% - 100px); background-color: blue; opacity: 0.5;"></div>
+            <!-- 这里可以嵌入地图代码，例如使用 Google Maps API 或 Leaflet -->
+        </div>
+        <div id="review-section">
+            <h3 id="file-preview">文件预览</h3>
+            <div id="file-links">
+                <a href="#" target="_blank" style="background-image: url('https://dummyimage.com/20x20/0000ff/ffffff&text=DOC'); background-repeat: no-repeat; background-position: 10px center; padding-left: 40px;">
+                    <div style="font-size: 12px;">《飞行计划申请表》</div>
+                </a>
+            </div>
+            <h3 id="result-title">审核结果</h3>
+            <div id="radio-group">
+                <input type="radio" id="approve-radio" name="review-result" value="approve">
+                <label for="approve-radio">通过</label>
+                <input type="radio" id="reject-radio" name="review-result" value="reject">
+                <label for="reject-radio">不通过</label>
+            </div>
+            <input type="text" id="result-input" placeholder="输入审核结果" maxlength="100">
+            <button id="submit-button">提交</button>
+        </div>
+    </div>
+    <div class="popup" id="conflict-popup">
+        <h3>冲突详情</h3>
+        <p id="popup-content"></p>
+        <button id="close-popup">关闭</button>
+    </div>
+
+    <script>
+        const toggleTableButton = document.getElementById('toggle-table');
+        const flightPlanCards = document.getElementById('flight-plan-cards');
+        const airspaceToggle = document.getElementById('airspace-toggle');
+        const legend = document.getElementById('legend');
+        const conflictPopup = document.getElementById('conflict-popup');
+        const popupContent = document.getElementById('popup-content');
+        const closePopupButton = document.getElementById('close-popup');
+        const map = document.getElementById('map');
+        const submitButton = document.getElementById('submit-button');
+
+        toggleTableButton.addEventListener('click', function () {
+            if (flightPlanCards.style.right === '-300px' || flightPlanCards.style.right === '') {
+                flightPlanCards.style.right = '0';
+                legend.style.right = '310px';
+                toggleTableButton.textContent = '收起';
+            } else {
+                flightPlanCards.style.right = '-300px';
+                legend.style.right = '10px';
+                toggleTableButton.textContent = '展开';
+            }
+        });
+
+        airspaceToggle.addEventListener('change', function () {
+            const shapes = document.querySelectorAll('.circle:not(:first-child),.polygon');
+            shapes.forEach(shape => {
+                shape.style.display = this.checked? 'block' : 'none';
+            });
+        });
+
+        flightPlanCards.addEventListener('click', function (event) {
+            if (event.target.closest('.flight-plan-card')) {
+                const card = event.target.closest('.flight-plan-card');
+                const planTime = card.querySelector('p:nth-child(2)').textContent;
+                // 模拟数据
+                const leaderName = '张三';
+                const contactPhone = '13800138000';
+                const conflictTime = '2025-05-01 10:00:00~2025-05-01 11:00:00';
+                popupContent.textContent = `单位负责人姓名: ${leaderName}, 联系电话: ${contactPhone}, 飞行计划时间: ${planTime}, 冲突时间: ${conflictTime}`;
+                conflictPopup.style.display = 'block';
+            }
+        });
+
+        closePopupButton.addEventListener('click', function () {
+            conflictPopup.style.display = 'none';
+        });
+
+        submitButton.addEventListener('click', function () {
+            const result = document.getElementById('result-input').value;
+            const reviewResult = document.querySelector('input[name="review-result"]:checked');
+            if (reviewResult) {
+                alert(`提交审核，结果: ${reviewResult.value}, 备注: ${result}`);
+            } else {
+                alert('请选择审核结果');
+            }
+        });
+    </script>
+</body>
+
+</html>    
